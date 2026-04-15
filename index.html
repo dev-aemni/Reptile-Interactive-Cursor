@@ -15,14 +15,28 @@
   }
 </style>
 <script>
-var Input = {
+
+
+const SETTINGS = {
+    thickness: 1,       // Line thickness (Higher = chunkier, Lower = stick-figure)
+    overallSize: 0.75,     // Scale of the creature (Higher = bigger creature overall)
+    bodyLength: 5,      // Number of leg segments (Higher = longer body / more legs)
+    tailLength: 100,    // Number of tail segments (Higher = longer tail)
+    smoothness: 1,      // How smoothly it follows the mouse (0.01 to 1.0)
+    speed: 1.5
+};
+
+
+  var targetMouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+
+  var Input = {
     keys: [],
     mouse: {
       left: false,
       right: false,
       middle: false,
-      x: 0,
-      y: 0
+      x: targetMouse.x,
+      y: targetMouse.y
     }
   };
 
@@ -60,9 +74,10 @@ var Input = {
       Input.mouse.right = false;
     }
   });
+  
   document.addEventListener("mousemove", function(event) {
-    Input.mouse.x = event.clientX;
-    Input.mouse.y = event.clientY;
+    targetMouse.x = event.clientX;
+    targetMouse.y = event.clientY;
   });
 
   //Sets up canvas
@@ -387,53 +402,53 @@ var Input = {
 
   var critter;
   function setupSimple() {
-    // create creature and a long chain of segments
     var critter = new Creature(
       window.innerWidth / 2,
       window.innerHeight / 2,
       0,
-      12,
+      12 * SETTINGS.speed,
       1,
       0.5,
       16,
-      0.5,
+      0.5 * SETTINGS.speed,
       0.085,
       0.5,
       0.3
     );
     var node = critter;
-    //(parent,size,angle,range,stiffness)
     for (var i = 0; i < 128; i++) {
       var node = new Segment(node, 8, 0, 3.14159 / 2, 1);
     }
     setInterval(function() {
+      Input.mouse.x += (targetMouse.x - Input.mouse.x) * SETTINGS.smoothness;
+      Input.mouse.y += (targetMouse.y - Input.mouse.y) * SETTINGS.smoothness;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       critter.follow(Input.mouse.x, Input.mouse.y);
     }, 33);
   }
+  
   function setupTentacle() {
-    //(x,y,angle,fAccel,fFric,fRes,fThresh,rAccel,rFric,rRes,rThresh)
     critter = new Creature(
       window.innerWidth / 2,
       window.innerHeight / 2,
       0,
-      12,
+      12 * SETTINGS.speed,
       1,
       0.5,
       16,
-      0.5,
+      0.5 * SETTINGS.speed,
       0.085,
       0.5,
       0.3
     );
     var node = critter;
-    //(parent,size,angle,range,stiffness)
     for (var i = 0; i < 32; i++) {
       var node = new Segment(node, 8, 0, 2, 1);
     }
-    //(end,length,speed,creature)
     var tentacle = new LimbSystem(node, 32, 8, critter);
     setInterval(function() {
+      Input.mouse.x += (targetMouse.x - Input.mouse.x) * SETTINGS.smoothness;
+      Input.mouse.y += (targetMouse.y - Input.mouse.y) * SETTINGS.smoothness;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       critter.follow(canvas.width / 2, canvas.height / 2);
       ctx.beginPath();
@@ -441,47 +456,47 @@ var Input = {
       ctx.fill();
     }, 33);
   }
+  
   function setupArm() {
-    //(x,y,angle,fAccel,fFric,fRes,fThresh,rAccel,rFric,rRes,rThresh)
     var critter = new Creature(
       window.innerWidth / 2,
       window.innerHeight / 2,
       0,
-      12,
+      12 * SETTINGS.speed,
       1,
       0.5,
       16,
-      0.5,
+      0.5 * SETTINGS.speed,
       0.085,
       0.5,
       0.3
     );
     var node = critter;
-    //(parent,size,angle,range,stiffness)
     for (var i = 0; i < 3; i++) {
       var node = new Segment(node, 80, 0, 3.1416, 1);
     }
     var tentacle = new LimbSystem(node, 3, critter);
     setInterval(function() {
+      Input.mouse.x += (targetMouse.x - Input.mouse.x) * SETTINGS.smoothness;
+      Input.mouse.y += (targetMouse.y - Input.mouse.y) * SETTINGS.smoothness;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       critter.follow(canvas.width / 2, canvas.height / 2);
+      ctx.beginPath();
+      ctx.arc(Input.mouse.x, Input.mouse.y, 2, 0, 6.283);
+      ctx.fill();
     }, 33);
-    ctx.beginPath();
-    ctx.arc(Input.mouse.x, Input.mouse.y, 2, 0, 6.283);
-    ctx.fill();
   }
   
   function setupTestSquid(size, legs) {
-    //(x,y,angle,fAccel,fFric,fRes,fThresh,rAccel,rFric,rRes,rThresh)
     critter = new Creature(
       window.innerWidth / 2,
       window.innerHeight / 2,
       0,
-      size * 10,
+      size * 10 * SETTINGS.speed,
       size * 3,
       0.5,
       16,
-      0.5,
+      0.5 * SETTINGS.speed,
       0.085,
       0.5,
       0.3
@@ -500,32 +515,32 @@ var Input = {
           1.2
         );
       }
-      //(end,length,speed,creature,dist)
-      var leg = new LegSystem(node, jointNum, size * 30, critter);
+      var leg = new LegSystem(node, jointNum, size * 30 * SETTINGS.speed, critter);
     }
     setInterval(function() {
+      Input.mouse.x += (targetMouse.x - Input.mouse.x) * SETTINGS.smoothness;
+      Input.mouse.y += (targetMouse.y - Input.mouse.y) * SETTINGS.smoothness;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       critter.follow(Input.mouse.x, Input.mouse.y);
     }, 33);
   }
+  
   function setupLizard(size, legs, tail) {
     var s = size;
-    //(x,y,angle,fAccel,fFric,fRes,fThresh,rAccel,rFric,rRes,rThresh)
     critter = new Creature(
       window.innerWidth / 2,
       window.innerHeight / 2,
       0,
-      s * 10,
+      s * 10 * SETTINGS.speed,
       s * 2,
       0.5,
       16,
-      0.5,
+      0.5 * SETTINGS.speed,
       0.085,
       0.5,
       0.3
     );
     var spinal = critter;
-    //(parent,size,angle,range,stiffness)
     //Neck
     for (var i = 0; i < 6; i++) {
       spinal = new Segment(spinal, s * 4, 0, 3.1415 * 2 / 3, 1.1);
@@ -562,7 +577,7 @@ var Input = {
         ) {
           new Segment(node, s * 4, (iii / 3 - 0.5) * 1.571, 0.1, 4);
         }
-        new LegSystem(node, 3, s * 12, critter, 4);
+        new LegSystem(node, 3, s * 12 * SETTINGS.speed, critter, 4);
       }
     }
     //Tail
@@ -576,19 +591,22 @@ var Input = {
       }
     }
     setInterval(function() {
+      Input.mouse.x += (targetMouse.x - Input.mouse.x) * SETTINGS.smoothness;
+      Input.mouse.y += (targetMouse.y - Input.mouse.y) * SETTINGS.smoothness;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       critter.follow(Input.mouse.x, Input.mouse.y);
     }, 33);
   }
+
 // create creature and a long chain of segments
   canvas.style.backgroundColor = "black";
   ctx.strokeStyle = "white";
+  ctx.lineWidth = SETTINGS.thickness; // Added Thickness Variable
   
-  var legNum = Math.floor(1 + Math.random() * 12);
   setupLizard(
-    8 / Math.sqrt(legNum),
-    legNum,
-    Math.floor(4 + Math.random() * legNum * 8)
+    SETTINGS.overallSize * 3.5, // Multiplied so default size "1" isn't microscopic
+    SETTINGS.bodyLength, 
+    SETTINGS.tailLength
   );
 </script>
 </body>
